@@ -657,9 +657,8 @@ async function startServer() {
             dbConnected = false;
         }
         
-        app.listen(port, '0.0.0.0', () => {
+        app.listen(port, () => {
             console.log(`🚀 Enat Bank Invoice Service running at http://localhost:${port}`);
-            console.log(`🌐 Network access: http://<your-ip>:${port}`);
             console.log(`📋 Available endpoints:`);
             
             if (dbConnected) {
