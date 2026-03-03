@@ -605,18 +605,20 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Root route - serve index.html
+// Root route - serve index.html with injected API_URL
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// API configuration endpoint
-app.get('/api-config', (req, res) => {
-    // If API_URL is set in env, use it; otherwise use the request host
-    const apiUrl = process.env.API_URL || `${req.protocol}://${req.get('host')}`;
-    res.json({
-        apiUrl: apiUrl
-    });
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    const apiUrl = process.env.API_URL || `http://localhost:${port}`;
+    
+    // Read the HTML file and inject API_URL
+    const fs = require('fs');
+    let html = fs.readFileSync(indexPath, 'utf8');
+    
+    // Replace the API_BASE placeholder with actual API_URL from env
+    html = html.replace('let API_BASE = window.location.origin;', `let API_BASE = '${apiUrl}';`);
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
 });
 
 // Test endpoint with sample data
