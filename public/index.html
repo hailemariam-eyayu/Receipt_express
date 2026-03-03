@@ -435,10 +435,17 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    const iframe = `<iframe src="${API_BASE}/invoice/${refNumber}/pdf" width="100%" height="600px" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>`;
+                    // Generate preview HTML from the data
+                    const previewResponse = await fetch(`${API_BASE}/preview-invoice`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data.data)
+                    });
+                    
+                    const html = await previewResponse.text();
                     showResult('db-result', `
                         <div class="alert alert-success">✅ Invoice generated successfully!</div>
-                        ${iframe}
+                        <iframe srcdoc="${html.replace(/"/g, '&quot;')}" width="100%" height="600px" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>
                     `);
                 } else {
                     showResult('db-result', `<div class="alert alert-error">❌ ${data.error}</div>`);

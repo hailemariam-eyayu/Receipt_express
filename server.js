@@ -110,21 +110,27 @@ function generateInvoiceHTML(data) {
             }
             
             .invoice-container {
-                width: 595px;
+                width: 100%;
+                max-width: 800px;
                 margin: 0 auto;
-                padding: 20px;
+                padding: 15px;
                 background: white;
             }
             
             .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 20px;
+                display: table;
+                width: 100%;
+                margin-bottom: 15px;
+                table-layout: fixed;
+            }
+            
+            .header > div {
+                display: table-cell;
+                vertical-align: top;
             }
             
             .logo-section {
-                width: 110px;
+                width: 120px;
                 height: 85px;
                 background: #f0f0f0;
                 display: flex;
@@ -137,15 +143,14 @@ function generateInvoiceHTML(data) {
             
             .bank-info {
                 text-align: center;
-                flex: 1;
-                margin: 0 20px;
+                padding: 0 15px;
             }
             
             .bank-name {
                 font-family: 'Bookman Old Style', serif;
                 font-size: 19px;
                 font-weight: bold;
-                margin-bottom: 10px;
+                margin-bottom: 8px;
             }
             
             .bank-details {
@@ -157,48 +162,54 @@ function generateInvoiceHTML(data) {
             .print-date {
                 text-align: right;
                 font-size: 10px;
+                width: 120px;
+                white-space: nowrap;
             }
             
             .separator {
                 border-top: 1px solid #000;
-                margin: 20px 0;
+                margin: 15px 0;
             }
             
             .section {
-                margin-bottom: 20px;
+                margin-bottom: 15px;
                 border: 1px solid #000;
-                padding: 15px;
+                padding: 12px;
             }
             
             .section-title {
                 text-align: center;
                 font-size: 12px;
                 font-weight: bold;
-                margin-bottom: 15px;
+                margin-bottom: 12px;
                 border-bottom: 1px solid #000;
                 padding-bottom: 5px;
             }
             
             .info-row {
-                display: flex;
-                margin-bottom: 8px;
-                align-items: flex-start;
+                display: table;
+                width: 100%;
+                margin-bottom: 6px;
+                table-layout: fixed;
             }
             
             .info-label {
+                display: table-cell;
                 font-family: 'Bookman Old Style', serif;
                 font-size: 10px;
                 font-style: italic;
-                width: 200px;
-                flex-shrink: 0;
+                width: 45%;
+                padding-right: 10px;
+                vertical-align: top;
             }
             
             .info-value {
+                display: table-cell;
                 font-family: 'Bookman Old Style', serif;
                 font-size: 10px;
                 font-style: italic;
-                flex: 1;
-                margin-left: 20px;
+                width: 55%;
+                vertical-align: top;
             }
             
             .transaction-detail .info-label,
@@ -209,7 +220,7 @@ function generateInvoiceHTML(data) {
             .amount-in-words {
                 background: #f9f9f9;
                 padding: 10px;
-                margin: 15px 0;
+                margin: 12px 0;
                 border: 1px solid #ddd;
             }
             
@@ -229,7 +240,7 @@ function generateInvoiceHTML(data) {
             
             .footer {
                 text-align: center;
-                margin-top: 30px;
+                margin-top: 20px;
                 padding: 10px;
                 background: rgba(84, 13, 13, 0.0);
                 color: #1599B0;
@@ -242,6 +253,17 @@ function generateInvoiceHTML(data) {
                 border-top: 1px solid #000;
                 padding-top: 5px;
                 margin-top: 5px;
+            }
+            
+            /* Print-specific styles for PDF generation */
+            @media print {
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+                .invoice-container {
+                    padding: 10px;
+                }
             }
         </style>
     </head>
@@ -407,10 +429,10 @@ app.get('/invoice/:referenceNumber/pdf', async (req, res) => {
             format: 'A4',
             orientation: 'portrait',
             border: {
-                top: '10mm',
-                right: '10mm',
-                bottom: '10mm',
-                left: '10mm'
+                top: '5mm',
+                right: '5mm',
+                bottom: '5mm',
+                left: '5mm'
             },
             type: 'pdf',
             quality: '100',
@@ -488,10 +510,10 @@ app.post('/generate-pdf', async (req, res) => {
             format: 'A4',
             orientation: 'portrait',
             border: {
-                top: '10mm',
-                right: '10mm',
-                bottom: '10mm',
-                left: '10mm'
+                top: '5mm',
+                right: '5mm',
+                bottom: '5mm',
+                left: '5mm'
             },
             type: 'pdf',
             quality: '100',
