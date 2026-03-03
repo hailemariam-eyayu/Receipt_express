@@ -277,7 +277,7 @@ function generateInvoiceHTML(data) {
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
-                    <img src="/logo.png" alt="Enat Bank Logo" onerror="this.parentElement.innerHTML='LOGO'">
+                    <img src="/images/logo.png" alt="Enat Bank Logo" onerror="this.parentElement.innerHTML='LOGO'">
                 </div>
                 <div class="bank-info">
                     <div class="bank-name">Enat Bank</div>
