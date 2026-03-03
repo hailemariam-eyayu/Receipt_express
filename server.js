@@ -132,13 +132,17 @@ function generateInvoiceHTML(data) {
             .logo-section {
                 width: 100px;
                 height: 70px;
-                background: #f0f0f0;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                border: 1px solid #ddd;
                 font-size: 9px;
                 text-align: center;
+            }
+            
+            .logo-section img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
             }
             
             .bank-info {
@@ -273,7 +277,7 @@ function generateInvoiceHTML(data) {
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
-                    LOGO
+                    <img src="/logo.png" alt="Enat Bank Logo" onerror="this.parentElement.innerHTML='LOGO'">
                 </div>
                 <div class="bank-info">
                     <div class="bank-name">Enat Bank</div>
