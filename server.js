@@ -402,15 +402,20 @@ app.get('/invoice/:referenceNumber/pdf', async (req, res) => {
         
         const html = generateInvoiceHTML(transactionData);
         
-        // PDF options
+        // PDF options - optimized for better quality and rendering
         const options = {
             format: 'A4',
+            orientation: 'portrait',
             border: {
                 top: '10mm',
                 right: '10mm',
                 bottom: '10mm',
                 left: '10mm'
-            }
+            },
+            type: 'pdf',
+            quality: '100',
+            timeout: 60000,
+            renderDelay: 2000
         };
         
         // Generate PDF
@@ -478,15 +483,20 @@ app.post('/generate-pdf', async (req, res) => {
         const invoiceData = req.body;
         const html = generateInvoiceHTML(invoiceData);
         
-        // PDF options
+        // PDF options - optimized for better quality and rendering
         const options = {
             format: 'A4',
+            orientation: 'portrait',
             border: {
                 top: '10mm',
                 right: '10mm',
                 bottom: '10mm',
                 left: '10mm'
-            }
+            },
+            type: 'pdf',
+            quality: '100',
+            timeout: 60000,
+            renderDelay: 2000
         };
         
         // Generate PDF
