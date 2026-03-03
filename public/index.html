@@ -476,7 +476,23 @@
                 return;
             }
 
-            window.open(`${API_BASE}/invoice/${refNumber}/pdf`, '_blank');
+            showLoading('db-loading', true);
+            
+            // Create a temporary link and trigger download
+            const downloadUrl = `${API_BASE}/invoice/${refNumber}/pdf`;
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `invoice_${refNumber}.pdf`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(a);
+                showLoading('db-loading', false);
+                showResult('db-result', '<div class="alert alert-success">✅ PDF download started!</div>');
+                setTimeout(() => hideResult('db-result'), 3000);
+            }, 500);
         }
 
         async function fetchData() {
@@ -572,6 +588,7 @@
             if (!invoiceData) return;
 
             showLoading('manual-loading', true);
+            hideResult('manual-result');
 
             try {
                 const response = await fetch(`${API_BASE}/generate-pdf`, {
@@ -580,18 +597,34 @@
                     body: JSON.stringify(invoiceData)
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const blob = await response.blob();
+                
+                // Check if blob is valid
+                if (blob.size === 0) {
+                    throw new Error('Received empty PDF file');
+                }
+
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `invoice_${invoiceData.transactionRef || 'manual'}.pdf`;
+                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
+                
+                // Clean up
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                }, 100);
 
                 showResult('manual-result', '<div class="alert alert-success">✅ PDF downloaded successfully!</div>');
             } catch (error) {
+                console.error('Download error:', error);
                 showResult('manual-result', `<div class="alert alert-error">❌ Error: ${error.message}</div>`);
             } finally {
                 showLoading('manual-loading', false);
