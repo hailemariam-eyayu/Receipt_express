@@ -605,6 +605,13 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// API configuration endpoint
+app.get('/api-config', (req, res) => {
+    res.json({
+        apiUrl: process.env.API_URL || `http://localhost:${port}`
+    });
+});
+
 // Test endpoint with sample data
 app.get('/test-invoice', (req, res) => {
     const sampleData = {

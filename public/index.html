@@ -402,7 +402,19 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:3004';
+        let API_BASE = 'http://localhost:3004';
+
+        // Fetch API configuration on page load
+        (async function initializeApiConfig() {
+            try {
+                const response = await fetch('/api-config');
+                const config = await response.json();
+                API_BASE = config.apiUrl;
+                console.log('API Base URL:', API_BASE);
+            } catch (error) {
+                console.warn('Failed to fetch API config, using default:', API_BASE);
+            }
+        })();
 
         // Tab switching
         function switchTab(tabName) {
