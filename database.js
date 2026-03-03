@@ -68,34 +68,58 @@ async function getTransactionData(referenceNumber) {
         request.input('Reference_number', sql.VarChar, referenceNumber);
         
         const query = `
-            SELECT DISTINCT 
-                i2.NAME, 
-                vil.AcNo , 
-                vil_cr.AcNo as CreditedAccount,
-                CASE 
-                    WHEN vil_cr.AcNo = '0011107983540001' THEN 'ETHIOPIAN AIRLINES GROUP'
-                    ELSE 'Other Receiver' 
-                END AS CreditAccountName,
-                vil.CustIden, 
-                i.DESCR, 
-                vil.TScrollId, 
-                vil.TrnDate, 
-                vil.Amount, 
-                vil.ComAmount, 
-                vil.ExchgAmount,
-                ISNULL(vil.Amount, 0) + ISNULL(vil.ComAmount, 0) + ISNULL(vil.ExchgAmount, 0) as Total_amount,
-                'ENAT BANK ' + ISNULL(vil.Channel, 'INTERNET') AS PaymentMode, 
-                vil.Particulars,
-                CAST(ISNULL(vil.Amount, 0) AS VARCHAR(20)) AS AmountString
-            FROM vIBTrnLog vil 
-            INNER JOIN vIBTrnLog vil_cr ON vil.TScrollId = vil_cr.TScrollId 
-                AND vil_cr.CrDr = 'CR'
-            LEFT JOIN IBTRNTYPE i ON vil.ModuleType = i.CODE 
-            LEFT JOIN IBUSERMASTER i2 ON i2.USERID = vil.UserId 
-            WHERE vil.CustIden = @Reference_number 
-              AND vil.CrDr = 'DR' 
-              AND vil.Status = '1'
-              AND vil.ModuleType = '170'
+SELECT DISTINCT 
+    i2.NAME, 
+    case 
+    	    when vil.branchcode = 9901 then MOBILENUMBER
+    	    else  vil.AcNo
+    end as 'AcNo',
+    -- 1. Fixed Duplicate Column and Type Mismatch
+    CASE 
+        WHEN vil.ModuleType = 170 THEN CAST(vil_cr.AcNo AS VARCHAR(50))
+        WHEN vil.ModuleType = 150 THEN CAST(vil_cr.AcNo AS VARCHAR(50))
+        WHEN vil.ModuleType = 148 THEN CAST(vil_cr.AcNo AS VARCHAR(50))
+        ELSE CAST(vil.Utility AS VARCHAR(50))
+    END AS CreditedAccount,
+    
+    CASE 
+        WHEN vil.ModuleType = 170 THEN 'ETHIOPIAN AIRLINES GROUP'
+        WHEN vil.ModuleType = 150 THEN 'OtherBank'
+        WHEN vil.ModuleType = 148 THEN 'Within'
+        ELSE vil.ThirdPartyName 
+    END AS CreditAccountName,
+    
+    vil.CustIden, 
+    i.DESCR, 
+    
+    -- 2. Fixed Type Mismatch (Mixing '150' with ScrollId/CustIden)
+    CASE 
+        WHEN vil.ModuleType = 170 THEN CAST(vil.TScrollId AS VARCHAR(50))
+        WHEN vil.ModuleType = 150 THEN '150'
+        WHEN vil.ModuleType = 148 THEN CAST(vil_cr.CustIden AS VARCHAR(50))
+        ELSE CAST(vil.UtilRefNo AS VARCHAR(50))
+    END AS "Receipt No",
+    
+    vil.TrnDate, 
+    vil.Amount, 
+    vil.ComAmount, 
+    vil.ExchgAmount,
+    ISNULL(vil.Amount, 0) + ISNULL(vil.ComAmount, 0) + ISNULL(vil.ExchgAmount, 0) AS Total_amount,
+    'ENAT BANK ' + ISNULL(vil.Channel, 'INTERNET') AS PaymentMode, 
+    vil.Particulars,
+    CAST(ISNULL(vil.Amount, 0) AS VARCHAR(20)) AS AmountString
+FROM vIBTrnLog vil 
+INNER JOIN vIBTrnLog vil_cr 
+    ON vil.TScrollId = vil_cr.TScrollId 
+    AND vil_cr.CrDr = 'CR'
+LEFT JOIN IBTRNTYPE i 
+    ON vil.ModuleType = i.CODE 
+LEFT JOIN IBUSERMASTER i2 
+    ON i2.USERID = vil.UserId
+left join IBUSERACTIVATIONENTRY on CUSTID = CUSTNO
+WHERE vil.CustIden = '004TBTT260580001' 
+  AND vil.CrDr = 'DR' 
+  AND vil.Status = '1'
         `;
         
         const result = await request.query(query);

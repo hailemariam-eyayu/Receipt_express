@@ -624,7 +624,7 @@ app.get('/', (req, res) => {
 // Test endpoint with sample data
 app.get('/test-invoice', (req, res) => {
     const sampleData = {
-        payerName: "John Doe",
+        payerName: "Abera Fekede",
         payerAccount: "1234567890123456",
         creditedPartyName: "ETHIOPIAN AIRLINES GROUP",
         creditedPartyAccount: "0011107983540001",
