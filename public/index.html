@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enat Bank Invoice Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .result-data {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+        }
+
+        .result-data pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 Enat Bank Invoice Generator</h1>
+            <p>Professional Invoice Generation with PDF Export</p>
+        </div>
+
+        <div class="content">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('database')">📊 From Database</button>
+                <button class="tab" onclick="switchTab('manual')">✍️ Manual Entry</button>
+                <button class="tab" onclick="switchTab('convert')">🔢 Amount Converter</button>
+            </div>
+
+            <!-- Database Tab -->
+            <div id="database-tab" class="tab-content active">
+                <div class="form-section">
+                    <h2>Generate Invoice from Database</h2>
+                    <div class="alert alert-info">
+                        Enter a transaction reference number to fetch data from the database and generate an invoice.
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="refNumber">Transaction Reference Number</label>
+                        <input type="text" id="refNumber" placeholder="e.g., 001ATAD253180011" value="001ATAD253180011">
+                    </div>
+
+                    <button class="btn" onclick="fetchInvoice()">📄 View Invoice</button>
+                    <button class="btn btn-secondary" onclick="downloadPDF()">⬇️ Download PDF</button>
+                    <button class="btn btn-success" onclick="fetchData()">🔍 View Data Only</button>
+                </div>
+
+                <div class="loading" id="db-loading">
+                    <div class="spinner"></div>
+                    <p>Processing...</p>
+                </div>
+
+                <div class="result" id="db-result"></div>
+            </div>
+
+            <!-- Manual Entry Tab -->
+            <div id="manual-tab" class="tab-content">
+                <div class="form-section">
+                    <h2>Manual Invoice Generation</h2>
+                    <div class="alert alert-info">
+                        Fill in the invoice details manually to generate a custom invoice.
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="payerName">Payer Name</label>
+                            <input type="text" id="payerName" placeholder="John Doe">
+                        </div>
+                        <div class="input-group">
+                            <label for="payerAccount">Payer Account</label>
+                            <input type="text" id="payerAccount" placeholder="1234567890123456">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="creditedPartyName">Credited Party Name</label>
+                            <input type="text" id="creditedPartyName" placeholder="ETHIOPIAN AIRLINES GROUP">
+                        </div>
+                        <div class="input-group">
+                            <label for="creditedPartyAccount">Credited Party Account</label>
+                            <input type="text" id="creditedPartyAccount" placeholder="0011107983540001">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="transactionRef">Transaction Reference</label>
+                            <input type="text" id="transactionRef" placeholder="001ATAD253180011">
+                        </div>
+                        <div class="input-group">
+                            <label for="receiptNo">Receipt Number</label>
+                            <input type="text" id="receiptNo" placeholder="12345678">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="amount">Amount</label>
+                            <input type="number" id="amount" placeholder="100.00" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label for="serviceCharge">Service Charge</label>
+                            <input type="number" id="serviceCharge" placeholder="0.00" step="0.01" value="0">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="vat">VAT</label>
+                            <input type="number" id="vat" placeholder="0.00" step="0.01" value="0">
+                        </div>
+                        <div class="input-group">
+                            <label for="paymentMode">Payment Mode</label>
+                            <input type="text" id="paymentMode" placeholder="ENAT BANK INTERNET" value="ENAT BANK INTERNET">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="paymentReason">Payment Reason</label>
+                        <textarea id="paymentReason" rows="2" placeholder="Service Payment"></textarea>
+                    </div>
+
+                    <button class="btn" onclick="previewManualInvoice()">👁️ Preview Invoice</button>
+                    <button class="btn btn-secondary" onclick="downloadManualPDF()">⬇️ Download PDF</button>
+                </div>
+
+                <div class="loading" id="manual-loading">
+                    <div class="spinner"></div>
+                    <p>Generating...</p>
+                </div>
+
+                <div class="result" id="manual-result"></div>
+            </div>
+
+            <!-- Amount Converter Tab -->
+            <div id="convert-tab" class="tab-content">
+                <div class="form-section">
+                    <h2>Amount to Words Converter</h2>
+                    <div class="alert alert-info">
+                        Convert numeric amounts to words (e.g., 100 → "One Hundred Birr")
+                    </div>
+
+                    <div class="input-group">
+                        <label for="convertAmount">Amount</label>
+                        <input type="number" id="convertAmount" placeholder="100" step="0.01">
+                    </div>
+
+                    <button class="btn" onclick="convertAmount()">🔄 Convert</button>
+                </div>
+
+                <div class="loading" id="convert-loading">
+                    <div class="spinner"></div>
+                    <p>Converting...</p>
+                </div>
+
+                <div class="result" id="convert-result"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Enat Bank Invoice Service v1.0.0 | Professional Invoice Generation</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3004';
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Database functions
+        async function fetchInvoice() {
+            const refNumber = document.getElementById('refNumber').value.trim();
+            if (!refNumber) {
+                showResult('db-result', '<div class="alert alert-error">Please enter a reference number</div>');
+                return;
+            }
+
+            showLoading('db-loading', true);
+            hideResult('db-result');
+
+            try {
+                const response = await fetch(`${API_BASE}/invoice/${refNumber}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const iframe = `<iframe src="${API_BASE}/invoice/${refNumber}/pdf" width="100%" height="600px" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>`;
+                    showResult('db-result', `
+                        <div class="alert alert-success">✅ Invoice generated successfully!</div>
+                        ${iframe}
+                    `);
+                } else {
+                    showResult('db-result', `<div class="alert alert-error">❌ ${data.error}</div>`);
+                }
+            } catch (error) {
+                showResult('db-result', `<div class="alert alert-error">❌ Error: ${error.message}</div>`);
+            } finally {
+                showLoading('db-loading', false);
+            }
+        }
+
+        function downloadPDF() {
+            const refNumber = document.getElementById('refNumber').value.trim();
+            if (!refNumber) {
+                showResult('db-result', '<div class="alert alert-error">Please enter a reference number</div>');
+                return;
+            }
+
+            window.open(`${API_BASE}/invoice/${refNumber}/pdf`, '_blank');
+        }
+
+        async function fetchData() {
+            const refNumber = document.getElementById('refNumber').value.trim();
+            if (!refNumber) {
+                showResult('db-result', '<div class="alert alert-error">Please enter a reference number</div>');
+                return;
+            }
+
+            showLoading('db-loading', true);
+            hideResult('db-result');
+
+            try {
+                const response = await fetch(`${API_BASE}/invoice/${refNumber}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('db-result', `
+                        <div class="alert alert-success">✅ Data retrieved successfully!</div>
+                        <div class="result-data">
+                            <pre>${JSON.stringify(data.data, null, 2)}</pre>
+                        </div>
+                    `);
+                } else {
+                    showResult('db-result', `<div class="alert alert-error">❌ ${data.error}</div>`);
+                }
+            } catch (error) {
+                showResult('db-result', `<div class="alert alert-error">❌ Error: ${error.message}</div>`);
+            } finally {
+                showLoading('db-loading', false);
+            }
+        }
+
+        // Manual entry functions
+        async function previewManualInvoice() {
+            const invoiceData = getManualFormData();
+            if (!invoiceData) return;
+
+            showLoading('manual-loading', true);
+            hideResult('manual-result');
+
+            try {
+                const response = await fetch(`${API_BASE}/preview-invoice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(invoiceData)
+                });
+
+                const html = await response.text();
+                showResult('manual-result', `
+                    <div class="alert alert-success">✅ Invoice preview generated!</div>
+                    <iframe srcdoc="${html.replace(/"/g, '&quot;')}" width="100%" height="600px" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>
+                `);
+            } catch (error) {
+                showResult('manual-result', `<div class="alert alert-error">❌ Error: ${error.message}</div>`);
+            } finally {
+                showLoading('manual-loading', false);
+            }
+        }
+
+        async function downloadManualPDF() {
+            const invoiceData = getManualFormData();
+            if (!invoiceData) return;
+
+            showLoading('manual-loading', true);
+
+            try {
+                const response = await fetch(`${API_BASE}/generate-pdf`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(invoiceData)
+                });
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice_${invoiceData.transactionRef || 'manual'}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showResult('manual-result', '<div class="alert alert-success">✅ PDF downloaded successfully!</div>');
+            } catch (error) {
+                showResult('manual-result', `<div class="alert alert-error">❌ Error: ${error.message}</div>`);
+            } finally {
+                showLoading('manual-loading', false);
+            }
+        }
+
+        function getManualFormData() {
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+            const serviceCharge = parseFloat(document.getElementById('serviceCharge').value) || 0;
+            const vat = parseFloat(document.getElementById('vat').value) || 0;
+
+            if (amount <= 0) {
+                showResult('manual-result', '<div class="alert alert-error">Please enter a valid amount</div>');
+                return null;
+            }
+
+            return {
+                payerName: document.getElementById('payerName').value || 'N/A',
+                payerAccount: document.getElementById('payerAccount').value || 'N/A',
+                creditedPartyName: document.getElementById('creditedPartyName').value || 'N/A',
+                creditedPartyAccount: document.getElementById('creditedPartyAccount').value || 'N/A',
+                transactionRef: document.getElementById('transactionRef').value || 'N/A',
+                receiptNo: document.getElementById('receiptNo').value || 'N/A',
+                amount: amount,
+                serviceCharge: serviceCharge,
+                vat: vat,
+                paymentMode: document.getElementById('paymentMode').value || 'ENAT BANK INTERNET',
+                paymentReason: document.getElementById('paymentReason').value || 'Service Payment'
+            };
+        }
+
+        // Amount converter
+        async function convertAmount() {
+            const amount = document.getElementById('convertAmount').value;
+            if (!amount || amount <= 0) {
+                showResult('convert-result', '<div class="alert alert-error">Please enter a valid amount</div>');
+                return;
+            }
+
+            showLoading('convert-loading', true);
+            hideResult('convert-result');
+
+            try {
+                const response = await fetch(`${API_BASE}/convert-amount/${amount}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('convert-result', `
+                        <div class="alert alert-success">✅ Conversion successful!</div>
+                        <div class="result-data">
+                            <h3>Amount: ${data.amount}</h3>
+                            <h2 style="color: #667eea; margin-top: 10px;">${data.words}</h2>
+                        </div>
+                    `);
+                } else {
+                    showResult('convert-result', `<div class="alert alert-error">❌ ${data.error}</div>`);
+                }
+            } catch (error) {
+                showResult('convert-result', `<div class="alert alert-error">❌ Error: ${error.message}</div>`);
+            } finally {
+                showLoading('convert-loading', false);
+            }
+        }
+
+        // Helper functions
+        function showLoading(id, show) {
+            const element = document.getElementById(id);
+            if (show) {
+                element.classList.add('show');
+            } else {
+                element.classList.remove('show');
+            }
+        }
+
+        function showResult(id, html) {
+            const element = document.getElementById(id);
+            element.innerHTML = html;
+            element.classList.add('show');
+        }
+
+        function hideResult(id) {
+            const element = document.getElementById(id);
+            element.classList.remove('show');
+        }
+    </script>
+</body>
+</html>

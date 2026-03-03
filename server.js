@@ -578,6 +578,11 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Root route - serve index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Test endpoint with sample data
 app.get('/test-invoice', (req, res) => {
     const sampleData = {
