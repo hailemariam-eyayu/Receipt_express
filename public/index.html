@@ -324,7 +324,7 @@
                     <div class="input-row">
                         <div class="input-group">
                             <label for="transactionRef">Transaction Reference</label>
-                            <input type="text" id="transactionRef" placeholder="001ATAD253180011">
+                            <input type="text" id="transactionRef" placeholder="001ATAD253180011" onblur="autoFillFromReference()">
                         </div>
                         <div class="input-group">
                             <label for="receiptNo">Receipt Number</label>
@@ -511,6 +511,36 @@
         }
 
         // Manual entry functions
+        async function autoFillFromReference() {
+            const refNumber = document.getElementById('transactionRef').value.trim();
+            if (!refNumber || refNumber.length < 5) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/invoice/${refNumber}`);
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    // Auto-fill the form with database data
+                    document.getElementById('payerName').value = data.data.payerName || '';
+                    document.getElementById('payerAccount').value = data.data.payerAccount || '';
+                    document.getElementById('creditedPartyName').value = data.data.creditedPartyName || '';
+                    document.getElementById('creditedPartyAccount').value = data.data.creditedPartyAccount || '';
+                    document.getElementById('receiptNo').value = data.data.receiptNo || '';
+                    document.getElementById('amount').value = data.data.amount || '';
+                    document.getElementById('serviceCharge').value = data.data.serviceCharge || 0;
+                    document.getElementById('vat').value = data.data.vat || 0;
+                    document.getElementById('paymentMode').value = data.data.paymentMode || 'ENAT BANK INTERNET';
+                    document.getElementById('paymentReason').value = data.data.paymentReason || '';
+                    
+                    showResult('manual-result', '<div class="alert alert-success">✅ Data auto-filled from database!</div>');
+                    setTimeout(() => hideResult('manual-result'), 3000);
+                }
+            } catch (error) {
+                // Silently fail - user can still enter manually
+                console.log('Auto-fill failed:', error);
+            }
+        }
+
         async function previewManualInvoice() {
             const invoiceData = getManualFormData();
             if (!invoiceData) return;

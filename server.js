@@ -111,16 +111,16 @@ function generateInvoiceHTML(data) {
             
             .invoice-container {
                 width: 100%;
-                max-width: 800px;
+                max-width: 750px;
                 margin: 0 auto;
-                padding: 15px;
+                padding: 10px;
                 background: white;
             }
             
             .header {
                 display: table;
                 width: 100%;
-                margin-bottom: 15px;
+                margin-bottom: 10px;
                 table-layout: fixed;
             }
             
@@ -130,129 +130,130 @@ function generateInvoiceHTML(data) {
             }
             
             .logo-section {
-                width: 120px;
-                height: 85px;
+                width: 100px;
+                height: 70px;
                 background: #f0f0f0;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 border: 1px solid #ddd;
-                font-size: 10px;
+                font-size: 9px;
                 text-align: center;
             }
             
             .bank-info {
                 text-align: center;
-                padding: 0 15px;
+                padding: 0 10px;
             }
             
             .bank-name {
                 font-family: 'Bookman Old Style', serif;
-                font-size: 19px;
+                font-size: 18px;
                 font-weight: bold;
-                margin-bottom: 8px;
+                margin-bottom: 5px;
             }
             
             .bank-details {
-                font-size: 8px;
+                font-size: 7px;
                 font-weight: bold;
-                line-height: 1.3;
+                line-height: 1.2;
             }
             
             .print-date {
                 text-align: right;
-                font-size: 10px;
-                width: 120px;
+                font-size: 9px;
+                width: 100px;
                 white-space: nowrap;
             }
             
             .separator {
                 border-top: 1px solid #000;
-                margin: 15px 0;
+                margin: 10px 0;
             }
             
             .section {
-                margin-bottom: 15px;
+                margin-bottom: 10px;
                 border: 1px solid #000;
-                padding: 12px;
+                padding: 8px;
             }
             
             .section-title {
                 text-align: center;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: bold;
-                margin-bottom: 12px;
+                margin-bottom: 8px;
                 border-bottom: 1px solid #000;
-                padding-bottom: 5px;
+                padding-bottom: 3px;
             }
             
             .info-row {
                 display: table;
                 width: 100%;
-                margin-bottom: 6px;
+                margin-bottom: 4px;
                 table-layout: fixed;
             }
             
             .info-label {
                 display: table-cell;
                 font-family: 'Bookman Old Style', serif;
-                font-size: 10px;
+                font-size: 9px;
                 font-style: italic;
-                width: 45%;
-                padding-right: 10px;
+                width: 40%;
+                padding-right: 8px;
                 vertical-align: top;
             }
             
             .info-value {
                 display: table-cell;
                 font-family: 'Bookman Old Style', serif;
-                font-size: 10px;
+                font-size: 9px;
                 font-style: italic;
-                width: 55%;
+                width: 60%;
                 vertical-align: top;
             }
             
             .transaction-detail .info-label,
             .transaction-detail .info-value {
-                font-size: 10px;
+                font-size: 9px;
             }
             
             .amount-in-words {
                 background: #f9f9f9;
-                padding: 10px;
-                margin: 12px 0;
+                padding: 8px;
+                margin: 8px 0;
                 border: 1px solid #ddd;
             }
             
             .amount-in-words-label {
                 font-family: 'Bookman Old Style', serif;
-                font-size: 10px;
+                font-size: 9px;
                 font-weight: bold;
-                margin-bottom: 5px;
+                margin-bottom: 3px;
             }
             
             .amount-in-words-text {
                 font-family: 'Bookman Old Style', serif;
-                font-size: 10px;
+                font-size: 9px;
                 font-style: italic;
                 word-wrap: break-word;
             }
             
             .footer {
                 text-align: center;
-                margin-top: 20px;
-                padding: 10px;
+                margin-top: 15px;
+                padding: 8px;
                 background: rgba(84, 13, 13, 0.0);
                 color: #1599B0;
                 font-weight: bold;
                 font-style: italic;
+                font-size: 10px;
             }
             
             .total-row {
                 font-weight: bold;
                 border-top: 1px solid #000;
-                padding-top: 5px;
-                margin-top: 5px;
+                padding-top: 4px;
+                margin-top: 4px;
             }
             
             /* Print-specific styles for PDF generation */
@@ -429,10 +430,10 @@ app.get('/invoice/:referenceNumber/pdf', async (req, res) => {
             format: 'A4',
             orientation: 'portrait',
             border: {
-                top: '5mm',
-                right: '5mm',
-                bottom: '5mm',
-                left: '5mm'
+                top: '3mm',
+                right: '3mm',
+                bottom: '3mm',
+                left: '3mm'
             },
             type: 'pdf',
             quality: '100',
@@ -510,10 +511,10 @@ app.post('/generate-pdf', async (req, res) => {
             format: 'A4',
             orientation: 'portrait',
             border: {
-                top: '5mm',
-                right: '5mm',
-                bottom: '5mm',
-                left: '5mm'
+                top: '3mm',
+                right: '3mm',
+                bottom: '3mm',
+                left: '3mm'
             },
             type: 'pdf',
             quality: '100',
