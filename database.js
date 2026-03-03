@@ -117,7 +117,7 @@ LEFT JOIN IBTRNTYPE i
 LEFT JOIN IBUSERMASTER i2 
     ON i2.USERID = vil.UserId
 left join IBUSERACTIVATIONENTRY on CUSTID = CUSTNO
-WHERE vil.CustIden = '004TBTT260580001' 
+WHERE vil.CustIden = @Reference_number
   AND vil.CrDr = 'DR' 
   AND vil.Status = '1'
         `;
