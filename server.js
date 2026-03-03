@@ -608,8 +608,10 @@ app.get('/', (req, res) => {
 
 // API configuration endpoint
 app.get('/api-config', (req, res) => {
+    // If API_URL is set in env, use it; otherwise use the request host
+    const apiUrl = process.env.API_URL || `${req.protocol}://${req.get('host')}`;
     res.json({
-        apiUrl: process.env.API_URL || `http://localhost:${port}`
+        apiUrl: apiUrl
     });
 });
 
@@ -655,8 +657,9 @@ async function startServer() {
             dbConnected = false;
         }
         
-        app.listen(port, () => {
+        app.listen(port, '0.0.0.0', () => {
             console.log(`🚀 Enat Bank Invoice Service running at http://localhost:${port}`);
+            console.log(`🌐 Network access: http://<your-ip>:${port}`);
             console.log(`📋 Available endpoints:`);
             
             if (dbConnected) {
