@@ -70,36 +70,30 @@ async function getTransactionData(referenceNumber) {
         const query = `
 SELECT DISTINCT 
     i2.NAME, 
-    case 
-    	    when vil.branchcode = 9901 then MOBILENUMBER
-    	    else  vil.AcNo
-    end as 'AcNo',
-    -- 1. Fixed Duplicate Column and Type Mismatch
+    CASE 
+        WHEN vil.branchcode = 9901 THEN act.MOBILENUMBER
+        ELSE vil.AcNo
+    END AS AcNo,
     CASE 
         WHEN vil.ModuleType = 170 THEN CAST(vil_cr.AcNo AS VARCHAR(50))
         WHEN vil.ModuleType = 150 THEN CAST(vil_cr.AcNo AS VARCHAR(50))
         WHEN vil.ModuleType = 148 THEN CAST(vil_cr.AcNo AS VARCHAR(50))
         ELSE CAST(vil.Utility AS VARCHAR(50))
     END AS CreditedAccount,
-    
     CASE 
         WHEN vil.ModuleType = 170 THEN 'ETHIOPIAN AIRLINES GROUP'
         WHEN vil.ModuleType = 150 THEN 'OtherBank'
         WHEN vil.ModuleType = 148 THEN 'Within'
         ELSE vil.ThirdPartyName 
     END AS CreditAccountName,
-    
     vil.CustIden, 
     i.DESCR, 
-    
-    -- 2. Fixed Type Mismatch (Mixing '150' with ScrollId/CustIden)
     CASE 
         WHEN vil.ModuleType = 170 THEN CAST(vil.TScrollId AS VARCHAR(50))
         WHEN vil.ModuleType = 150 THEN '150'
         WHEN vil.ModuleType = 148 THEN CAST(vil_cr.CustIden AS VARCHAR(50))
         ELSE CAST(vil.UtilRefNo AS VARCHAR(50))
     END AS "Receipt No",
-    
     vil.TrnDate, 
     vil.Amount, 
     vil.ComAmount, 
@@ -116,8 +110,14 @@ LEFT JOIN IBTRNTYPE i
     ON vil.ModuleType = i.CODE 
 LEFT JOIN IBUSERMASTER i2 
     ON i2.USERID = vil.UserId
-left join IBUSERACTIVATIONENTRY on CUSTID = CUSTNO
-WHERE vil.CustIden = @Reference_number
+OUTER APPLY (
+    SELECT TOP 1 MOBILENUMBER 
+    FROM IBUSERACTIVATIONENTRY 
+    WHERE i2.CUSTID = custno 
+      AND ENTRYDATE <= vil.TrnDate 
+    ORDER BY ENTRYDATE DESC
+) act
+WHERE vil.CustIden = '004TBTT260580001'
   AND vil.CrDr = 'DR' 
   AND vil.Status = '1'
         `;
@@ -138,7 +138,7 @@ WHERE vil.CustIden = @Reference_number
             creditedPartyAccount: record.CreditedAccount || '',
             transactionRef: record.CustIden || referenceNumber,
             transactionType: record.DESCR || 'Fund Transfer',
-            receiptNo: record.TScrollId ? record.TScrollId.toString() : '',
+            receiptNo: record["Receipt No"] || '',
             paymentDate: record.TrnDate || new Date(),
             amount: parseFloat(record.Amount) || 0,
             serviceCharge: parseFloat(record.ComAmount) || 0,
