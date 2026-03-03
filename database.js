@@ -117,7 +117,7 @@ OUTER APPLY (
       AND ENTRYDATE <= vil.TrnDate 
     ORDER BY ENTRYDATE DESC
 ) act
-WHERE vil.CustIden = '004TBTT260580001'
+WHERE vil.CustIden = @Reference_number
   AND vil.CrDr = 'DR' 
   AND vil.Status = '1'
         `;
