@@ -140,7 +140,7 @@ WHERE vil.CustIden = @Reference_number
             creditedPartyName: record.CreditAccountName || '',
             creditedPartyAccount: record.CreditedAccount || '',
             transactionRef: record.CustIden || referenceNumber,
-            transactionType: record.DESCR || '',
+            transactionType: record.Description || '',
             receiptNo: record["Receipt No"] || '',
             paymentDate: record.TrnDate || new Date(),
             amount: parseFloat(record.Amount) || 0,
