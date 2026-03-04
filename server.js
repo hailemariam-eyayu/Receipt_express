@@ -10,6 +10,25 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3002;
 
+// Absolute logo path for PDF rendering (wkhtmltopdf / PhantomJS may need file:// URL)
+const PDF_LOGO_PATH = `file:///${path.join(__dirname, 'public', 'images', 'logo.png').replace(/\\/g, '/')}`;
+
+// Pre-load logo as base64 so PDFs don't depend on file path resolution
+let LOGO_DATA_URL = null;
+try {
+    const logoFilePath = path.join(__dirname, 'public', 'images', 'logo.png');
+    if (fs.existsSync(logoFilePath)) {
+        const logoBuffer = fs.readFileSync(logoFilePath);
+        // Assume PNG logo as per LOGO_INSTRUCTIONS.md
+        LOGO_DATA_URL = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+        console.log('✅ Loaded logo for invoice template.');
+    } else {
+        console.warn('⚠️ Logo file not found at public/images/logo.png - invoice will show text placeholder.');
+    }
+} catch (e) {
+    console.warn('⚠️ Failed to load logo file for invoice template:', e.message);
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -65,7 +84,8 @@ function numberToWords(num) {
 }
 
 // Generate invoice HTML
-function generateInvoiceHTML(data) {
+function generateInvoiceHTML(data, options = {}) {
+    const { isPdf = false } = options;
     const {
         payerName = "",
         payerAccount = "",
@@ -83,8 +103,10 @@ function generateInvoiceHTML(data) {
     } = data;
 
     const totalAmount = amount + serviceCharge + vat;
-    const amountInWords = numberToWords(Math.floor(totalAmount)) + " Birr";
+    const amountInWords = numberToWords(Math.floor(totalAmount)) + " Birr Only";
     const formattedDate = moment(paymentDate).format('DD/MM/YYYY');
+    // Prefer embedded base64 logo for both browser and PDF; fall back to path if missing
+    const logoSrc = LOGO_DATA_URL || (isPdf ? PDF_LOGO_PATH : '/images/logo.png');
 
     return `
     <!DOCTYPE html>
@@ -92,7 +114,7 @@ function generateInvoiceHTML(data) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Enat Bank Invoice</title>
+        <title>Enat Bank Payment Receipt</title>
         <style>
             * {
                 margin: 0;
@@ -101,26 +123,41 @@ function generateInvoiceHTML(data) {
             }
             
             body {
-                font-family: 'Times New Roman', serif;
+                font-family: Arial, Helvetica, sans-serif;
                 font-size: 12px;
                 line-height: 1.4;
                 color: #000;
-                background: white;
+                background: #fff;
             }
             
             .invoice-container {
                 width: 100%;
-                max-width: 750px;
-                margin: 0 auto;
-                padding: 10px;
-                background: white;
+                max-width: 800px;
+                /* Extra top margin so printed PDF has more space from page top */
+                margin: 25mm auto 0 auto;
+                padding: 10px 20px;
+                background: #fff;
+            }
+            
+            .receipt-title-bar {
+                width: 100%;
+                border: 1px solid #000;
+                border-bottom: none;
+                text-align: center;
+                padding: 6px 0;
+                font-weight: bold;
+                font-size: 14px;
+                letter-spacing: 0.5px;
             }
             
             .header {
                 display: table;
                 width: 100%;
-                margin-bottom: 10px;
+                border: 1px solid #000;
+                border-top: none;
+                padding: 6px 8px;
                 table-layout: fixed;
+                margin-bottom: 8px;
             }
             
             .header > div {
@@ -129,152 +166,117 @@ function generateInvoiceHTML(data) {
             }
             
             .logo-section {
-                width: 100px;
-                height: 70px;
-                text-align: center;
-                font-size: 9px;
-                padding-right: 10px;
+                width: 120px;
+                text-align: left;
             }
             
             .logo-section img {
-                max-width: 100px;
+                max-width: 110px;
                 max-height: 70px;
-                width: 100px;
-                height: 70px;
             }
             
-            .bank-info {
-                padding-left: 20px;
-                padding-right: 10px;
-            }
-            
-            .bank-name {
-                font-family: 'Bookman Old Style', serif;
-                font-size: 18px;
+            .bank-center {
+                text-align: center;
+                font-size: 11px;
                 font-weight: bold;
-                margin-bottom: 5px;
-                margin-left: 80px;
-                text-align: left;
             }
             
-            .bank-details {
-                font-size: 7px;
-                font-weight: bold;
-                line-height: 1.4;
-                margin-left: 40px;
-                max-width: 400px;
-            }
-            
-            .bank-detail-row {
-                display: table;
-                width: 100%;
+            .bank-center .bank-name {
+                font-size: 14px;
                 margin-bottom: 2px;
-                table-layout: fixed;
             }
             
-            .bank-detail-label {
-                display: table-cell;
+            .bank-center .bank-subtitle {
+                font-size: 11px;
+            }
+            
+            .bank-right {
                 text-align: left;
-                width: 35%;
-                padding-right: 3px;
+                font-size: 10px;
             }
             
-            .bank-detail-value {
-                display: table-cell;
-                text-align: right;
-                width: 65%;
-            }
-            
-            .separator {
-                border-top: 1px solid #000;
-                margin: 10px 0;
+            .bank-right div {
+                line-height: 1.5;
             }
             
             .section {
-                margin-bottom: 10px;
+                margin-bottom: 8px;
                 border: 1px solid #000;
-                padding: 8px;
+                border-collapse: collapse;
+                padding: 0;
             }
             
             .section-title {
                 text-align: center;
-                font-size: 11px;
+                font-size: 12px;
                 font-weight: bold;
-                margin-bottom: 8px;
                 border-bottom: 1px solid #000;
-                padding-bottom: 3px;
+                padding: 4px 0;
+                background: #f5f5f5;
+            }
+            
+            .info-table {
+                width: 100%;
+                border-collapse: collapse;
             }
             
             .info-row {
-                display: table;
-                width: 100%;
-                margin-bottom: 4px;
-                table-layout: fixed;
+                border-bottom: 1px solid #000;
+            }
+            
+            .info-row:last-child {
+                border-bottom: none;
+            }
+            
+            .info-label,
+            .info-value {
+                padding: 3px 8px;
+                font-size: 10px;
             }
             
             .info-label {
-                display: table-cell;
-                font-family: 'Bookman Old Style', serif;
-                font-size: 9px;
-                font-style: italic;
                 width: 35%;
-                padding-left: 5px;
-                padding-right: 5px;
-                vertical-align: top;
+                font-weight: bold;
             }
             
             .info-value {
-                display: table-cell;
-                font-family: 'Bookman Old Style', serif;
-                font-size: 9px;
-                font-style: italic;
                 width: 65%;
-                padding-left: 5px;
-                vertical-align: top;
             }
             
-            .transaction-detail .info-label,
-            .transaction-detail .info-value {
-                font-size: 9px;
+            .total-row .info-label,
+            .total-row .info-value {
+                font-weight: bold;
             }
             
             .amount-in-words {
-                background: #f9f9f9;
-                padding: 8px;
-                margin: 8px 0;
-                border: 1px solid #ddd;
+                margin-top: 0;
+                border-top: 1px solid #000;
+                background: #f5f5f5;
+            }
+            
+            .amount-in-words-label,
+            .amount-in-words-text {
+                padding: 4px 8px;
+                font-size: 10px;
             }
             
             .amount-in-words-label {
-                font-family: 'Bookman Old Style', serif;
-                font-size: 9px;
                 font-weight: bold;
-                margin-bottom: 3px;
+                width: 25%;
+                display: inline-block;
             }
             
             .amount-in-words-text {
-                font-family: 'Bookman Old Style', serif;
-                font-size: 9px;
-                font-style: italic;
-                word-wrap: break-word;
+                display: inline-block;
+                width: 70%;
             }
             
             .footer {
                 text-align: center;
-                margin-top: 15px;
-                padding: 8px;
-                background: rgba(84, 13, 13, 0.0);
-                color: #1599B0;
+                margin-top: 16px;
+                padding: 8px 0;
                 font-weight: bold;
-                font-style: italic;
                 font-size: 10px;
-            }
-            
-            .total-row {
-                font-weight: bold;
-                border-top: 1px solid #000;
-                padding-top: 4px;
-                margin-top: 4px;
             }
             
             /* Print-specific styles for PDF generation */
@@ -284,119 +286,107 @@ function generateInvoiceHTML(data) {
                     padding: 0;
                 }
                 .invoice-container {
-                    padding: 10px;
+                    padding: 10px 20px;
                 }
             }
         </style>
     </head>
     <body>
         <div class="invoice-container">
+            <!-- Top title bar -->
+            <div class="receipt-title-bar">
+                PAYMENT RECIEPT
+            </div>
+            
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
-                    <img src="/images/logo.png" alt="Enat Bank Logo" onerror="this.parentElement.innerHTML='LOGO'">
+                    <img src="${logoSrc}" alt="Enat Bank Logo">
                 </div>
-                <div class="bank-info">
-                    <div class="bank-name">Enat Bank</div>
-                    <div class="bank-details">
-                        <div class="bank-detail-row">
-                            <span class="bank-detail-label">Address:</span>
-                            <span class="bank-detail-value">Kirkos Sub-City, Woreda 8, Addis Ababa</span>
-                        </div>
-                        <div class="bank-detail-row">
-                            <span class="bank-detail-label">VAT Reg. Number:</span>
-                            <span class="bank-detail-value">6935790003</span>
-                        </div>
-                        <div class="bank-detail-row">
-                            <span class="bank-detail-label">Tin No:</span>
-                            <span class="bank-detail-value">0036793983</span>
-                        </div>
-                        <div class="bank-detail-row">
-                            <span class="bank-detail-label">P.O Box:</span>
-                            <span class="bank-detail-value">18401</span>
-                        </div>
-                        <div class="bank-detail-row">
-                            <span class="bank-detail-label">Telephone:</span>
-                            <span class="bank-detail-value">+251115589416</span>
-                        </div>
-                        <div class="bank-detail-row">
-                            <span class="bank-detail-label">Fax:</span>
-                            <span class="bank-detail-value">251115151338</span>
-                        </div>
-                    </div>
+                <div class="bank-center">
+                    <div class="bank-name">ENAT BANK</div>
+                    <div class="bank-subtitle">Kirkos Sub-City, Woreda 8, Addis Ababa</div>
+                </div>
+                <div class="bank-right">
+                    <div>VAT Reg. Number&nbsp;&nbsp;&nbsp;&nbsp;6935790003</div>
+                    <div>Tin No.&nbsp;&nbsp;&nbsp;&nbsp;0036793983</div>
+                    <div>P.O.Box&nbsp;&nbsp;&nbsp;&nbsp;18401</div>
+                    <div>Telephone&nbsp;&nbsp;&nbsp;&nbsp;+251115589416</div>
+                    <div>Fax&nbsp;&nbsp;&nbsp;&nbsp;251115151338</div>
                 </div>
             </div>
-            
-            <div class="separator"></div>
             
             <!-- Transaction Information -->
             <div class="section">
                 <div class="section-title">TRANSACTION INFORMATION</div>
-                <div class="info-row">
-                    <div class="info-label">PAYER NAME</div>
-                    <div class="info-value">${payerName}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">PAYER ACCOUNT NO</div>
-                    <div class="info-value">${payerAccount}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">CREDITED PARTY NAME</div>
-                    <div class="info-value">${creditedPartyName}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">CREDITED PARTY ACCOUNT NO</div>
-                    <div class="info-value">${creditedPartyAccount}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">TRANSACTION REFERENCE NUMBER</div>
-                    <div class="info-value">${transactionRef}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">TRANSACTION TYPE</div>
-                    <div class="info-value">${transactionType}</div>
-                </div>
+                <table class="info-table">
+                    <tr class="info-row">
+                        <td class="info-label">PAYER NAME</td>
+                        <td class="info-value">${payerName}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">PAYER ACCOUNT NO</td>
+                        <td class="info-value">${payerAccount}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">CREDITED PARTY NAME</td>
+                        <td class="info-value">${creditedPartyName}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">CREDITED PARTY ACCOUNT NO</td>
+                        <td class="info-value">${creditedPartyAccount}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">TRANSACTION REFERENCE NUMBER</td>
+                        <td class="info-value">${transactionRef}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">TRANSACTION TYPE</td>
+                        <td class="info-value">${transactionType}</td>
+                    </tr>
+                </table>
             </div>
             
             <!-- Transaction Detail -->
-            <div class="section transaction-detail">
+            <div class="section">
                 <div class="section-title">TRANSACTION DETAIL</div>
-                <div class="info-row">
-                    <div class="info-label">RECEIPT NO</div>
-                    <div class="info-value">${receiptNo}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">PAYMENT DATE</div>
-                    <div class="info-value">${formattedDate}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">AMOUNT</div>
-                    <div class="info-value">${amount.toFixed(4)}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">SERVICE CHARGE</div>
-                    <div class="info-value">${serviceCharge.toFixed(4)}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">VAT</div>
-                    <div class="info-value">${vat.toFixed(4)}</div>
-                </div>
-                <div class="info-row total-row">
-                    <div class="info-label">TOTAL AMOUNT</div>
-                    <div class="info-value">${totalAmount.toFixed(4)}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">PAYMENT MODE</div>
-                    <div class="info-value">${paymentMode}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">PAYMENT REASON</div>
-                    <div class="info-value">${paymentReason}</div>
-                </div>
-                
+                <table class="info-table">
+                    <tr class="info-row">
+                        <td class="info-label">RECEIPT NO</td>
+                        <td class="info-value">${receiptNo}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">PAYMENT DATE</td>
+                        <td class="info-value">${formattedDate}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">AMOUNT IN FIGURE</td>
+                        <td class="info-value">${amount.toFixed(2)}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">SERVICE CHARGE</td>
+                        <td class="info-value">${serviceCharge.toFixed(2)}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">VAT</td>
+                        <td class="info-value">${vat.toFixed(2)}</td>
+                    </tr>
+                    <tr class="info-row total-row">
+                        <td class="info-label">TOTAL AMOUNT IN FIGURE</td>
+                        <td class="info-value">${totalAmount.toFixed(2)}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">PAYMENT MODE</td>
+                        <td class="info-value">${paymentMode}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">PAYMENT REASON</td>
+                        <td class="info-value">${paymentReason}</td>
+                    </tr>
+                </table>
                 <div class="amount-in-words">
-                    <div class="amount-in-words-label">AMOUNT IN WORDS:</div>
-                    <div class="amount-in-words-text">${amountInWords}</div>
+                    <span class="amount-in-words-label">TOTAL AMOUNT IN WORD</span>
+                    <span class="amount-in-words-text">${amountInWords}</span>
                 </div>
             </div>
             
@@ -458,7 +448,7 @@ app.get('/invoice/:referenceNumber/pdf', async (req, res) => {
             });
         }
         
-        const html = generateInvoiceHTML(transactionData);
+        const html = generateInvoiceHTML(transactionData, { isPdf: true });
         
         // PDF options - optimized for better quality and rendering
         const options = {
@@ -521,7 +511,7 @@ app.get('/db-test', async (req, res) => {
 app.post('/generate-invoice', (req, res) => {
     try {
         const invoiceData = req.body;
-        const html = generateInvoiceHTML(invoiceData);
+        const html = generateInvoiceHTML(invoiceData, { isPdf: true });
         
         res.json({
             success: true,
@@ -613,7 +603,7 @@ app.get('/convert-amount/:amount', (req, res) => {
             });
         }
         
-        const words = numberToWords(Math.floor(amount)) + " Birr";
+        const words = numberToWords(Math.floor(amount)) + " Birr Only";
         
         res.json({
             success: true,
