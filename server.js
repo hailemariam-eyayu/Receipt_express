@@ -13,6 +13,27 @@ const port = process.env.PORT || 3002;
 // Absolute logo path for PDF rendering (wkhtmltopdf / PhantomJS may need file:// URL)
 const PDF_LOGO_PATH = `file:///${path.join(__dirname, 'public', 'images', 'logo.png').replace(/\\/g, '/')}`;
 
+// Restrict "View Data Only" feature to specific IPs
+const DATA_ONLY_ALLOWED_IPS = new Set(['10.254.100.51']);
+
+function normalizeIp(ip) {
+    if (!ip) return '';
+    // Express/Node may return IPv6-mapped IPv4 like ::ffff:10.0.0.1
+    if (ip.startsWith('::ffff:')) return ip.slice('::ffff:'.length);
+    return ip;
+}
+
+function getClientIp(req) {
+    // If behind a proxy/load balancer, X-Forwarded-For may be present.
+    // We don't blindly trust it for security in all deployments, but it helps for UI visibility.
+    const xff = req.headers['x-forwarded-for'];
+    if (typeof xff === 'string' && xff.trim().length > 0) {
+        const first = xff.split(',')[0].trim();
+        return normalizeIp(first);
+    }
+    return normalizeIp(req.socket?.remoteAddress || req.ip || '');
+}
+
 // Pre-load logo as base64 so PDFs don't depend on file path resolution
 let LOGO_DATA_URL = null;
 try {
@@ -159,6 +180,13 @@ function generateInvoiceHTML(data, options = {}) {
                 table-layout: fixed;
                 margin-bottom: 8px;
             }
+
+            .header-divider {
+                border: 0;
+                border-top: 1px solid #000;
+                margin: 0 0 6px 0;
+                height: 0;
+            }
             
             .header > div {
                 display: table-cell;
@@ -176,18 +204,34 @@ function generateInvoiceHTML(data, options = {}) {
             }
             
             .bank-center {
-                text-align: center;
-                font-size: 11px;
+                text-align: left;
+                font-size: 10px;
+                font-weight: normal;
+                padding-left: 10px;
+            }
+
+            .bank-center table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .bank-center td {
+                padding: 2px 6px;
+                vertical-align: top;
+            }
+
+            .bank-center td:first-child {
+                width: 42%;
                 font-weight: bold;
+                white-space: nowrap;
             }
-            
-            .bank-center .bank-name {
-                font-size: 14px;
-                margin-bottom: 2px;
-            }
-            
-            .bank-center .bank-subtitle {
-                font-size: 11px;
+
+            /* First row: bank name + address */
+            .bank-center tr:first-child td {
+                font-size: 12px;
+                font-weight: bold;
+                padding-top: 0;
+                padding-bottom: 4px;
             }
             
             .bank-right {
@@ -297,23 +341,35 @@ function generateInvoiceHTML(data, options = {}) {
             <div class="receipt-title-bar">
                 PAYMENT RECIEPT
             </div>
-            
+            <hr class="header-divider"/>
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
                     <img src="${logoSrc}" alt="Enat Bank Logo">
                 </div>
-                <div class="bank-center">
-                    <div class="bank-name">ENAT BANK</div>
-                    <div class="bank-subtitle">Kirkos Sub-City, Woreda 8, Addis Ababa</div>
-                </div>
-                <div class="bank-right">
-                    <div>VAT Reg. Number&nbsp;&nbsp;&nbsp;&nbsp;6935790003</div>
-                    <div>Tin No.&nbsp;&nbsp;&nbsp;&nbsp;0036793983</div>
-                    <div>P.O.Box&nbsp;&nbsp;&nbsp;&nbsp;18401</div>
-                    <div>Telephone&nbsp;&nbsp;&nbsp;&nbsp;+251115589416</div>
-                    <div>Fax&nbsp;&nbsp;&nbsp;&nbsp;251115151338</div>
-                </div>
+              <div class="bank-center">
+           
+                <table>
+                   <tr>  
+                    <td> ENAT BANK </td> <td> Kirkos Sub-City, Woreda 8, Addis Ababa </td>
+                   </tr>
+                     <tr>  
+                    <td> VAT Reg. Number  </td> <td> 6935790003 </td>
+                   </tr>
+                     <tr>  
+                    <td> Tin No.  </td> <td> 0036793983  </td>
+                   </tr>
+                     <tr>  
+                    <td> P.O.Box </td> <td> 18401  </td>
+                   </tr>
+                     <tr>  
+                    <td>  Telephone </td> <td> 251115589416 </td>
+                   </tr>
+                     <tr>  
+                    <td> Fax </td> <td> 251115151338  </td>
+                   </tr>
+                </table>
+            </div>
             </div>
             
             <!-- Transaction Information -->
@@ -376,6 +432,10 @@ function generateInvoiceHTML(data, options = {}) {
                         <td class="info-value">${totalAmount.toFixed(2)}</td>
                     </tr>
                     <tr class="info-row">
+                       <td class="info-label">TOTAL AMOUNT IN WORD</td>
+                        <td class="info-value">${amountInWords}</td>                  
+                    </tr>
+                    <tr class="info-row">
                         <td class="info-label">PAYMENT MODE</td>
                         <td class="info-value">${paymentMode}</td>
                     </tr>
@@ -384,10 +444,6 @@ function generateInvoiceHTML(data, options = {}) {
                         <td class="info-value">${paymentReason}</td>
                     </tr>
                 </table>
-                <div class="amount-in-words">
-                    <span class="amount-in-words-label">TOTAL AMOUNT IN WORD</span>
-                    <span class="amount-in-words-text">${amountInWords}</span>
-                </div>
             </div>
             
             <div class="footer">
@@ -425,6 +481,43 @@ app.get('/invoice/:referenceNumber', async (req, res) => {
         
     } catch (error) {
         console.error('❌ Error fetching transaction:', error.message);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// "View Data Only" endpoint (restricted by IP)
+app.get('/invoice/:referenceNumber/data-only', async (req, res) => {
+    try {
+        const clientIp = getClientIp(req);
+        if (!DATA_ONLY_ALLOWED_IPS.has(clientIp)) {
+            return res.status(403).json({
+                success: false,
+                error: 'Forbidden'
+            });
+        }
+
+        const { referenceNumber } = req.params;
+        console.log(`🔐 Data-only access from ${clientIp} for reference: ${referenceNumber}`);
+
+        const transactionData = await getTransactionData(referenceNumber);
+        if (!transactionData) {
+            return res.status(404).json({
+                success: false,
+                error: 'Transaction not found',
+                referenceNumber: referenceNumber
+            });
+        }
+
+        res.json({
+            success: true,
+            data: transactionData,
+            message: 'Transaction data retrieved successfully'
+        });
+    } catch (error) {
+        console.error('❌ Error fetching transaction (data-only):', error.message);
         res.status(500).json({
             success: false,
             error: error.message
@@ -530,7 +623,7 @@ app.post('/generate-invoice', (req, res) => {
 app.post('/generate-pdf', async (req, res) => {
     try {
         const invoiceData = req.body;
-        const html = generateInvoiceHTML(invoiceData);
+        const html = generateInvoiceHTML(invoiceData, { isPdf: true });
         
         // PDF options - optimized for better quality and rendering
         const options = {
@@ -639,6 +732,11 @@ app.get('/', (req, res) => {
     
     // Replace the API_BASE placeholder with actual API_URL from env
     html = html.replace('let API_BASE = window.location.origin;', `let API_BASE = '${apiUrl}';`);
+
+    // Inject whether this client may see the "View Data Only" button
+    const clientIp = getClientIp(req);
+    const canViewDataOnly = DATA_ONLY_ALLOWED_IPS.has(clientIp);
+    html = html.replace('let SHOW_DATA_ONLY = false;', `let SHOW_DATA_ONLY = ${canViewDataOnly};`);
     
     res.setHeader('Content-Type', 'text/html');
     res.send(html);

@@ -15,12 +15,12 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 50px 20px 20px;
         }
 
         .container {
             max-width: 900px;
-            margin: 0 auto;
+            margin: 20px auto 0 auto;
             background: white;
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
@@ -259,16 +259,14 @@
 
         <div class="content">
             <!-- Tabs -->
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('database')">📊 From Database</button>
-                <button class="tab" onclick="switchTab('manual')">✍️ Manual Entry</button>
-                <button class="tab" onclick="switchTab('convert')">🔢 Amount Converter</button>
-            </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('database')">📊 Generating Invoice/Receipt for transactions done via MB, USSD or IB only</button>
+                </div>
 
             <!-- Database Tab -->
             <div id="database-tab" class="tab-content active">
                 <div class="form-section">
-                    <h2>Generate Invoice from Database</h2>
+                    <h2>Invoice / Receipt Generation</h2>
                     <div class="alert alert-info">
                         Enter a transaction reference number to fetch data from the database and generate an invoice.
                     </div>
@@ -280,7 +278,7 @@
 
                     <button class="btn" onclick="fetchInvoice()">📄 View Invoice</button>
                     <button class="btn btn-secondary" onclick="downloadPDF()">⬇️ Download PDF</button>
-                    <button class="btn btn-success" onclick="fetchData()">🔍 View Data Only</button>
+                    <button class="btn btn-success" id="viewDataOnlyBtn" onclick="fetchData()" style="display:none;">🔍 View Data Only</button>
                 </div>
 
                 <div class="loading" id="db-loading">
@@ -291,109 +289,7 @@
                 <div class="result" id="db-result"></div>
             </div>
 
-            <!-- Manual Entry Tab -->
-            <div id="manual-tab" class="tab-content">
-                <div class="form-section">
-                    <h2>Manual Invoice Generation</h2>
-                    <div class="alert alert-info">
-                        Fill in the invoice details manually to generate a custom invoice.
-                    </div>
 
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label for="payerName">Payer Name</label>
-                            <input type="text" id="payerName" placeholder="John Doe">
-                        </div>
-                        <div class="input-group">
-                            <label for="payerAccount">Payer Account</label>
-                            <input type="text" id="payerAccount" placeholder="1234567890123456">
-                        </div>
-                    </div>
-
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label for="creditedPartyName">Credited Party Name</label>
-                            <input type="text" id="creditedPartyName" placeholder="ETHIOPIAN AIRLINES GROUP">
-                        </div>
-                        <div class="input-group">
-                            <label for="creditedPartyAccount">Credited Party Account</label>
-                            <input type="text" id="creditedPartyAccount" placeholder="0011107983540001">
-                        </div>
-                    </div>
-
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label for="transactionRef">Transaction Reference</label>
-                            <input type="text" id="transactionRef" placeholder="001ATAD253180011" onblur="autoFillFromReference()">
-                        </div>
-                        <div class="input-group">
-                            <label for="receiptNo">Receipt Number</label>
-                            <input type="text" id="receiptNo" placeholder="12345678">
-                        </div>
-                    </div>
-
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label for="amount">Amount</label>
-                            <input type="number" id="amount" placeholder="100.00" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label for="serviceCharge">Service Charge</label>
-                            <input type="number" id="serviceCharge" placeholder="0.00" step="0.01" value="0">
-                        </div>
-                    </div>
-
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label for="vat">VAT</label>
-                            <input type="number" id="vat" placeholder="0.00" step="0.01" value="0">
-                        </div>
-                        <div class="input-group">
-                            <label for="paymentMode">Payment Mode</label>
-                            <input type="text" id="paymentMode" placeholder="ENAT BANK INTERNET" value="ENAT BANK INTERNET">
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="paymentReason">Payment Reason</label>
-                        <textarea id="paymentReason" rows="2" placeholder="Service Payment"></textarea>
-                    </div>
-
-                    <button class="btn" onclick="previewManualInvoice()">👁️ Preview Invoice</button>
-                    <button class="btn btn-secondary" onclick="downloadManualPDF()">⬇️ Download PDF</button>
-                </div>
-
-                <div class="loading" id="manual-loading">
-                    <div class="spinner"></div>
-                    <p>Generating...</p>
-                </div>
-
-                <div class="result" id="manual-result"></div>
-            </div>
-
-            <!-- Amount Converter Tab -->
-            <div id="convert-tab" class="tab-content">
-                <div class="form-section">
-                    <h2>Amount to Words Converter</h2>
-                    <div class="alert alert-info">
-                        Convert numeric amounts to words (e.g., 100 → "One Hundred Birr")
-                    </div>
-
-                    <div class="input-group">
-                        <label for="convertAmount">Amount</label>
-                        <input type="number" id="convertAmount" placeholder="100" step="0.01">
-                    </div>
-
-                    <button class="btn" onclick="convertAmount()">🔄 Convert</button>
-                </div>
-
-                <div class="loading" id="convert-loading">
-                    <div class="spinner"></div>
-                    <p>Converting...</p>
-                </div>
-
-                <div class="result" id="convert-result"></div>
-            </div>
         </div>
 
         <div class="footer">
@@ -404,6 +300,8 @@
     <script>
         // API_BASE will be injected by server from .env
         let API_BASE = window.location.origin; // This will be replaced by server
+        // Will be injected by server based on client IP (server.js replaces this line)
+        let SHOW_DATA_ONLY = false;
 
         // Tab switching
         function switchTab(tabName) {
@@ -495,7 +393,7 @@
             hideResult('db-result');
 
             try {
-                const response = await fetch(`${API_BASE}/invoice/${refNumber}`);
+                const response = await fetch(`${API_BASE}/invoice/${refNumber}/data-only`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -515,168 +413,11 @@
             }
         }
 
-        // Manual entry functions
-        async function autoFillFromReference() {
-            const refNumber = document.getElementById('transactionRef').value.trim();
-            if (!refNumber || refNumber.length < 5) return;
-
-            try {
-                const response = await fetch(`${API_BASE}/invoice/${refNumber}`);
-                const data = await response.json();
-
-                if (data.success && data.data) {
-                    // Auto-fill the form with database data
-                    document.getElementById('payerName').value = data.data.payerName || '';
-                    document.getElementById('payerAccount').value = data.data.payerAccount || '';
-                    document.getElementById('creditedPartyName').value = data.data.creditedPartyName || '';
-                    document.getElementById('creditedPartyAccount').value = data.data.creditedPartyAccount || '';
-                    document.getElementById('receiptNo').value = data.data.receiptNo || '';
-                    document.getElementById('amount').value = data.data.amount || '';
-                    document.getElementById('serviceCharge').value = data.data.serviceCharge || 0;
-                    document.getElementById('vat').value = data.data.vat || 0;
-                    document.getElementById('paymentMode').value = data.data.paymentMode || 'ENAT BANK INTERNET';
-                    document.getElementById('paymentReason').value = data.data.paymentReason || '';
-                    
-                    showResult('manual-result', '<div class="alert alert-success">✅ Data auto-filled from database!</div>');
-                    setTimeout(() => hideResult('manual-result'), 3000);
-                }
-            } catch (error) {
-                // Silently fail - user can still enter manually
-                console.log('Auto-fill failed:', error);
-            }
-        }
-
-        async function previewManualInvoice() {
-            const invoiceData = getManualFormData();
-            if (!invoiceData) return;
-
-            showLoading('manual-loading', true);
-            hideResult('manual-result');
-
-            try {
-                const response = await fetch(`${API_BASE}/preview-invoice`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(invoiceData)
-                });
-
-                const html = await response.text();
-                showResult('manual-result', `
-                    <div class="alert alert-success">✅ Invoice preview generated!</div>
-                    <iframe srcdoc="${html.replace(/"/g, '&quot;')}" width="100%" height="600px" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>
-                `);
-            } catch (error) {
-                showResult('manual-result', `<div class="alert alert-error">❌ Error: ${error.message}</div>`);
-            } finally {
-                showLoading('manual-loading', false);
-            }
-        }
-
-        async function downloadManualPDF() {
-            const invoiceData = getManualFormData();
-            if (!invoiceData) return;
-
-            showLoading('manual-loading', true);
-            hideResult('manual-result');
-
-            try {
-                const response = await fetch(`${API_BASE}/generate-pdf`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(invoiceData)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const blob = await response.blob();
-                
-                // Check if blob is valid
-                if (blob.size === 0) {
-                    throw new Error('Received empty PDF file');
-                }
-
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `invoice_${invoiceData.transactionRef || 'manual'}.pdf`;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                
-                // Clean up
-                setTimeout(() => {
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                }, 100);
-
-                showResult('manual-result', '<div class="alert alert-success">✅ PDF downloaded successfully!</div>');
-            } catch (error) {
-                console.error('Download error:', error);
-                showResult('manual-result', `<div class="alert alert-error">❌ Error: ${error.message}</div>`);
-            } finally {
-                showLoading('manual-loading', false);
-            }
-        }
-
-        function getManualFormData() {
-            const amount = parseFloat(document.getElementById('amount').value) || 0;
-            const serviceCharge = parseFloat(document.getElementById('serviceCharge').value) || 0;
-            const vat = parseFloat(document.getElementById('vat').value) || 0;
-
-            if (amount <= 0) {
-                showResult('manual-result', '<div class="alert alert-error">Please enter a valid amount</div>');
-                return null;
-            }
-
-            return {
-                payerName: document.getElementById('payerName').value || 'N/A',
-                payerAccount: document.getElementById('payerAccount').value || 'N/A',
-                creditedPartyName: document.getElementById('creditedPartyName').value || 'N/A',
-                creditedPartyAccount: document.getElementById('creditedPartyAccount').value || 'N/A',
-                transactionRef: document.getElementById('transactionRef').value || 'N/A',
-                receiptNo: document.getElementById('receiptNo').value || 'N/A',
-                amount: amount,
-                serviceCharge: serviceCharge,
-                vat: vat,
-                paymentMode: document.getElementById('paymentMode').value || 'ENAT BANK INTERNET',
-                paymentReason: document.getElementById('paymentReason').value || 'Service Payment'
-            };
-        }
-
-        // Amount converter
-        async function convertAmount() {
-            const amount = document.getElementById('convertAmount').value;
-            if (!amount || amount <= 0) {
-                showResult('convert-result', '<div class="alert alert-error">Please enter a valid amount</div>');
-                return;
-            }
-
-            showLoading('convert-loading', true);
-            hideResult('convert-result');
-
-            try {
-                const response = await fetch(`${API_BASE}/convert-amount/${amount}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    showResult('convert-result', `
-                        <div class="alert alert-success">✅ Conversion successful!</div>
-                        <div class="result-data">
-                            <h3>Amount: ${data.amount}</h3>
-                            <h2 style="color: #667eea; margin-top: 10px;">${data.words}</h2>
-                        </div>
-                    `);
-                } else {
-                    showResult('convert-result', `<div class="alert alert-error">❌ ${data.error}</div>`);
-                }
-            } catch (error) {
-                showResult('convert-result', `<div class="alert alert-error">❌ Error: ${error.message}</div>`);
-            } finally {
-                showLoading('convert-loading', false);
-            }
-        }
+        // Show/hide "View Data Only" button based on injected flag
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('viewDataOnlyBtn');
+            if (btn && SHOW_DATA_ONLY) btn.style.display = '';
+        });
 
         // Helper functions
         function showLoading(id, show) {
