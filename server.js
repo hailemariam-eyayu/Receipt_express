@@ -67,19 +67,19 @@ function numberToWords(num) {
 // Generate invoice HTML
 function generateInvoiceHTML(data) {
     const {
-        payerName = "Sample Payer",
-        payerAccount = "1234567890",
-        creditedPartyName = "ETHIOPIAN AIRLINES GROUP",
-        creditedPartyAccount = "0011107983540001",
-        transactionRef = "001ATAD253180011",
-        transactionType = "Fund Transfer",
-        receiptNo = "12345678",
+        payerName = "",
+        payerAccount = "",
+        creditedPartyName = "",
+        creditedPartyAccount = "",
+        transactionRef = "",
+        transactionType = "",
+        receiptNo = "",
         paymentDate = new Date(),
-        amount = 10.00,
+        amount = 0.00,
         serviceCharge = 0.00,
         vat = 0.00,
-        paymentMode = "ENAT BANK INTERNET",
-        paymentReason = "Service Payment"
+        paymentMode = "",
+        paymentReason = ""
     } = data;
 
     const totalAmount = amount + serviceCharge + vat;

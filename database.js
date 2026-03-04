@@ -132,20 +132,20 @@ WHERE vil.CustIden = @Reference_number
         
         // Transform database result to invoice format
         return {
-            payerName: record.NAME || 'Unknown Payer',
+            payerName: record.NAME || '',
             payerAccount: record.AcNo || '',
-            creditedPartyName: record.CreditAccountName || 'Unknown Receiver',
+            creditedPartyName: record.CreditAccountName || '',
             creditedPartyAccount: record.CreditedAccount || '',
             transactionRef: record.CustIden || referenceNumber,
-            transactionType: record.DESCR || 'Fund Transfer',
+            transactionType: record.DESCR || '',
             receiptNo: record["Receipt No"] || '',
             paymentDate: record.TrnDate || new Date(),
             amount: parseFloat(record.Amount) || 0,
             serviceCharge: parseFloat(record.ComAmount) || 0,
             vat: parseFloat(record.ExchgAmount) || 0,
             totalAmount: parseFloat(record.Total_amount) || 0,
-            paymentMode: record.PaymentMode || 'ENAT BANK INTERNET',
-            paymentReason: record.Particulars || 'Service Payment'
+            paymentMode: record.PaymentMode || '',
+            paymentReason: record.Particulars || ''
         };
         
     } catch (error) {
