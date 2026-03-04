@@ -133,16 +133,19 @@ function generateInvoiceHTML(data) {
                 height: 70px;
                 text-align: center;
                 font-size: 9px;
+                padding-right: 10px;
             }
             
             .logo-section img {
-                max-width: 100%;
-                max-height: 100%;
-                object-fit: contain;
+                max-width: 100px;
+                max-height: 70px;
+                width: 100px;
+                height: 70px;
             }
             
             .bank-info {
-                padding: 0 10px;
+                padding-left: 20px;
+                padding-right: 10px;
             }
             
             .bank-name {
@@ -150,13 +153,16 @@ function generateInvoiceHTML(data) {
                 font-size: 18px;
                 font-weight: bold;
                 margin-bottom: 5px;
-                text-align: center;
+                margin-left: 80px;
+                text-align: left;
             }
             
             .bank-details {
                 font-size: 7px;
                 font-weight: bold;
                 line-height: 1.4;
+                margin-left: 40px;
+                max-width: 400px;
             }
             
             .bank-detail-row {
@@ -169,14 +175,14 @@ function generateInvoiceHTML(data) {
             .bank-detail-label {
                 display: table-cell;
                 text-align: left;
-                width: 40%;
-                padding-right: 5px;
+                width: 35%;
+                padding-right: 3px;
             }
             
             .bank-detail-value {
                 display: table-cell;
                 text-align: right;
-                width: 60%;
+                width: 65%;
             }
             
             .separator {
@@ -288,7 +294,7 @@ function generateInvoiceHTML(data) {
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
-                    <img src="/images/logo.png" alt="Enat Bank Logo" onerror="this.parentElement.innerHTML='LOGO'">
+                    <img src="file://${path.join(__dirname, 'public', 'images', 'logo.png')}" alt="Enat Bank Logo" onerror="this.parentElement.innerHTML='LOGO'">
                 </div>
                 <div class="bank-info">
                     <div class="bank-name">Enat Bank</div>
