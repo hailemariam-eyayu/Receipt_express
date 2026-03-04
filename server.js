@@ -205,8 +205,9 @@ function generateInvoiceHTML(data) {
                 font-family: 'Bookman Old Style', serif;
                 font-size: 9px;
                 font-style: italic;
-                width: 40%;
-                padding-right: 8px;
+                width: 35%;
+                padding-left: 5px;
+                padding-right: 5px;
                 vertical-align: top;
             }
             
@@ -215,7 +216,8 @@ function generateInvoiceHTML(data) {
                 font-family: 'Bookman Old Style', serif;
                 font-size: 9px;
                 font-style: italic;
-                width: 60%;
+                width: 65%;
+                padding-left: 5px;
                 vertical-align: top;
             }
             
