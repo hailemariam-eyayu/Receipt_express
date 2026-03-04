@@ -294,7 +294,7 @@ function generateInvoiceHTML(data) {
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
-                    <img src="file://${path.join(__dirname, 'public', 'images', 'logo.png')}" alt="Enat Bank Logo" onerror="this.parentElement.innerHTML='LOGO'">
+                    <img src="/images/logo.png" alt="Enat Bank Logo" onerror="this.parentElement.innerHTML='LOGO'">
                 </div>
                 <div class="bank-info">
                     <div class="bank-name">Enat Bank</div>
@@ -473,7 +473,8 @@ app.get('/invoice/:referenceNumber/pdf', async (req, res) => {
             type: 'pdf',
             quality: '100',
             timeout: 60000,
-            renderDelay: 2000
+            renderDelay: 2000,
+            base: `file:///${path.join(__dirname, 'public').replace(/\\/g, '/')}/`
         };
         
         // Generate PDF
@@ -554,7 +555,8 @@ app.post('/generate-pdf', async (req, res) => {
             type: 'pdf',
             quality: '100',
             timeout: 60000,
-            renderDelay: 2000
+            renderDelay: 2000,
+            base: `file:///${path.join(__dirname, 'public').replace(/\\/g, '/')}/`
         };
         
         // Generate PDF
