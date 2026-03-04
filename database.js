@@ -75,24 +75,24 @@ SELECT DISTINCT
         ELSE vil.AcNo
     END AS AcNo,
     CASE 
-        WHEN vil.ModuleType = 170 THEN CAST(vil_cr.AcNo AS VARCHAR(50))
-        WHEN vil.ModuleType = 150 THEN CAST(vil_cr.AcNo AS VARCHAR(50))
-        WHEN vil.ModuleType = 148 THEN CAST(vil_cr.AcNo AS VARCHAR(50))
-        ELSE CAST(vil.Utility AS VARCHAR(50))
+        WHEN vil.ModuleType in (152,163,153,162,164,165) THEN CAST(vil.Utility AS VARCHAR(50))
+        ELSE CAST(vil_cr.AcNo AS VARCHAR(50))
     END AS CreditedAccount,
     CASE 
         WHEN vil.ModuleType = 170 THEN 'ETHIOPIAN AIRLINES GROUP'
-        WHEN vil.ModuleType = 150 THEN 'OtherBank'
-        WHEN vil.ModuleType = 148 THEN 'Within'
-        ELSE vil.ThirdPartyName 
+        WHEN vil.ModuleType in (152,163,153,162,164,165) THEN vil.ThirdPartyName  
+        when vil.ModuleType = 168 then ut.EntName
+        ELSE i3.name
     END AS CreditAccountName,
     vil.CustIden, 
-    i.DESCR, 
-    CASE 
-        WHEN vil.ModuleType = 170 THEN CAST(vil.TScrollId AS VARCHAR(50))
-        WHEN vil.ModuleType = 150 THEN '150'
-        WHEN vil.ModuleType = 148 THEN CAST(vil_cr.CustIden AS VARCHAR(50))
-        ELSE CAST(vil.UtilRefNo AS VARCHAR(50))
+  case 
+     when vil.ModuleType = 148 then 'Account to Account/Wallet'
+	   else i.DESCR
+	    end as Description,
+	    
+	CASE 
+        WHEN vil.ModuleType in (152,163,153,162,164,165) THEN CAST(vil.UtilRefNo AS VARCHAR(50))
+        ELSE CAST(vil_cr.TScrollId AS VARCHAR(50))
     END AS "Receipt No",
     vil.TrnDate, 
     vil.Amount, 
@@ -110,6 +110,9 @@ LEFT JOIN IBTRNTYPE i
     ON vil.ModuleType = i.CODE 
 LEFT JOIN IBUSERMASTER i2 
     ON i2.USERID = vil.UserId
+LEFT JOIN IBUSERMASTER i3 
+    ON CAST(SUBSTRING(vil_cr.acno, 5, 7) AS VARCHAR(50)) = CAST(i3.custid AS VARCHAR(50))
+    left join UnicashTrn ut on ut.IBTrnScrollId = vil.TScrollId
 OUTER APPLY (
     SELECT TOP 1 MOBILENUMBER 
     FROM IBUSERACTIVATIONENTRY 
