@@ -85,10 +85,10 @@ SELECT DISTINCT
         ELSE i3.name
     END AS CreditAccountName,
     vil.CustIden, 
-  case 
-     when vil.ModuleType = 148 then 'Account to Account/Wallet'
-	   else i.DESCR
-	    end as Description,
+    CASE 
+        WHEN vil.ModuleType = 148 THEN 'Account to Account/Wallet'
+        ELSE i.DESCR
+    END AS Description,
 	    
 	CASE 
         WHEN vil.ModuleType in (152,163,153,162,164,165) THEN CAST(vil.UtilRefNo AS VARCHAR(50))
