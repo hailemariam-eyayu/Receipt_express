@@ -117,21 +117,22 @@ function generateInvoiceHTML(data) {
             }
             
             .header {
-                display: flex;
+                display: table;
                 width: 100%;
                 margin-bottom: 10px;
-                align-items: flex-start;
+                table-layout: fixed;
+            }
+            
+            .header > div {
+                display: table-cell;
+                vertical-align: top;
             }
             
             .logo-section {
                 width: 100px;
-                min-width: 100px;
                 height: 70px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 9px;
                 text-align: center;
+                font-size: 9px;
             }
             
             .logo-section img {
@@ -141,7 +142,6 @@ function generateInvoiceHTML(data) {
             }
             
             .bank-info {
-                flex: 1;
                 padding: 0 10px;
             }
             
@@ -160,17 +160,23 @@ function generateInvoiceHTML(data) {
             }
             
             .bank-detail-row {
-                display: flex;
-                justify-content: space-between;
+                display: table;
+                width: 100%;
                 margin-bottom: 2px;
+                table-layout: fixed;
             }
             
             .bank-detail-label {
+                display: table-cell;
                 text-align: left;
+                width: 40%;
+                padding-right: 5px;
             }
             
             .bank-detail-value {
+                display: table-cell;
                 text-align: right;
+                width: 60%;
             }
             
             .separator {
