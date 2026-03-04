@@ -84,8 +84,7 @@ function generateInvoiceHTML(data) {
 
     const totalAmount = amount + serviceCharge + vat;
     const amountInWords = numberToWords(Math.floor(totalAmount)) + " Birr";
-    const formattedDate = moment(paymentDate).format('dddd DD MMMM YYYY');
-    const printDate = moment().format('dddd DD MMMM YYYY');
+    const formattedDate = moment(paymentDate).format('DD/MM/YYYY');
 
     return `
     <!DOCTYPE html>
@@ -118,19 +117,15 @@ function generateInvoiceHTML(data) {
             }
             
             .header {
-                display: table;
+                display: flex;
                 width: 100%;
                 margin-bottom: 10px;
-                table-layout: fixed;
-            }
-            
-            .header > div {
-                display: table-cell;
-                vertical-align: top;
+                align-items: flex-start;
             }
             
             .logo-section {
                 width: 100px;
+                min-width: 100px;
                 height: 70px;
                 display: flex;
                 align-items: center;
@@ -146,7 +141,7 @@ function generateInvoiceHTML(data) {
             }
             
             .bank-info {
-                text-align: center;
+                flex: 1;
                 padding: 0 10px;
             }
             
@@ -155,19 +150,27 @@ function generateInvoiceHTML(data) {
                 font-size: 18px;
                 font-weight: bold;
                 margin-bottom: 5px;
+                text-align: center;
             }
             
             .bank-details {
                 font-size: 7px;
                 font-weight: bold;
-                line-height: 1.2;
+                line-height: 1.4;
             }
             
-            .print-date {
+            .bank-detail-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 2px;
+            }
+            
+            .bank-detail-label {
+                text-align: left;
+            }
+            
+            .bank-detail-value {
                 text-align: right;
-                font-size: 9px;
-                width: 100px;
-                white-space: nowrap;
             }
             
             .separator {
@@ -282,17 +285,31 @@ function generateInvoiceHTML(data) {
                 <div class="bank-info">
                     <div class="bank-name">Enat Bank</div>
                     <div class="bank-details">
-                        Address: Kirkos Sub-City, Woreda 8, Addis Ababa<br>
-                        VAT Reg. Number: 6935790003<br>
-                        Tin No: 0036793983<br>
-                        P.O Box: 18401<br>
-                        Telephone: +251115589416<br>
-                        Fax: 251115151338
+                        <div class="bank-detail-row">
+                            <span class="bank-detail-label">Address:</span>
+                            <span class="bank-detail-value">Kirkos Sub-City, Woreda 8, Addis Ababa</span>
+                        </div>
+                        <div class="bank-detail-row">
+                            <span class="bank-detail-label">VAT Reg. Number:</span>
+                            <span class="bank-detail-value">6935790003</span>
+                        </div>
+                        <div class="bank-detail-row">
+                            <span class="bank-detail-label">Tin No:</span>
+                            <span class="bank-detail-value">0036793983</span>
+                        </div>
+                        <div class="bank-detail-row">
+                            <span class="bank-detail-label">P.O Box:</span>
+                            <span class="bank-detail-value">18401</span>
+                        </div>
+                        <div class="bank-detail-row">
+                            <span class="bank-detail-label">Telephone:</span>
+                            <span class="bank-detail-value">+251115589416</span>
+                        </div>
+                        <div class="bank-detail-row">
+                            <span class="bank-detail-label">Fax:</span>
+                            <span class="bank-detail-value">251115151338</span>
+                        </div>
                     </div>
-                </div>
-                <div class="print-date">
-                    <strong>Print Date:</strong><br>
-                    ${printDate}
                 </div>
             </div>
             
